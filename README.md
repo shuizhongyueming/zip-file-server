@@ -1,5 +1,5 @@
 
-ZipServer is a lightweight library that serves as an intermediary between the web client and the server. It provides an efficient way to package and download numerous fragmented files as required.
+ZipFileServer is a lightweight library that serves as an intermediary between the web client and the server. It provides an efficient way to package and download numerous fragmented files as required.
 
 ## Table of Contents
 
@@ -9,16 +9,16 @@ ZipServer is a lightweight library that serves as an intermediary between the we
 
 ## Overview
 
-When ZipServer receives a file request, it prioritizes searching and delivering from the corresponding remote zip package.
+When ZipFileServer receives a file request, it prioritizes searching and delivering from the corresponding remote zip package.
 
 This process is seamless for both the client and the server.
 
 ## Installation
 
-To install ZipServer, run the following command:
+To install ZipFileServer, run the following command:
 
 ```bash
-npm install zip-server
+npm install zip-file-server
 ```
 
 ## Usage
@@ -26,9 +26,9 @@ npm install zip-server
 Please refer to the provided example for detailed usage.
 
 ```javascript
-import {ZipServer} from '../dist/main.js';
+import {ZipFileServer} from '../dist/main.js';
 
-const server = new ZipServer({
+const server = new ZipFileServer({
   remotes: [
     {
       prefix: 'bundle/',

@@ -1,8 +1,8 @@
 
 
-import {ZipServer} from '../dist/main.js';
+import {ZipFileServer} from '../dist/main.js';
 
-const server = new ZipServer({
+const server = new ZipFileServer({
   remotes: [
     {
       prefix: 'bundle/',

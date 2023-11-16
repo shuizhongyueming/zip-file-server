@@ -1,14 +1,15 @@
-import {configure, Entry, ZipReader, BlobWriter, BlobReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
+import {Entry} from '@zip.js/zip.js'
+import {configure, ZipReader, BlobWriter, BlobReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
 
 interface Remote {
   zipUrl: string;
   prefix: string;
 }
 
-interface ZipServerOptions {
+interface ZipFileServerOptions {
   remotes: Remote[];
   fetch: typeof fetch;
-  fallbackUrl?: string;
+  fallbackUrl: string;
 }
 
 interface UrlResponse {
@@ -16,7 +17,7 @@ interface UrlResponse {
   onComplete: () => void;
 }
 
-export class ZipServer {
+export class ZipFileServer {
   static SuffixMapContentType = {
     FORM_URLENCODED: 'application/x-www-form-urlencoded',
     GIF: 'image/gif',
@@ -38,9 +39,9 @@ export class ZipServer {
   private remotes: Remote[];
   private fetch: typeof fetch;
   private zipCache = new Map<string, Promise<Entry[]>>();
-  private fallbackUrl?: string;
+  private fallbackUrl: string;
 
-  constructor(options: ZipServerOptions) {
+  constructor(options: ZipFileServerOptions) {
     configure({ useWebWorkers: false });
     this.remotes = options.remotes;
     this.fetch = options.fetch;
@@ -95,13 +96,13 @@ export class ZipServer {
     const entry = await this.getTargetEntry(url);
 
     if (entry) {
-      let writer: BlobWriter;
+      let writer;
       if (headers?.['content-type']) {
         writer = this.getWriterBasedOnContentType(headers['content-type']);
       } else {
         writer = this.getWriterBasedOnUrl(url);
       }
-      return entry.getData(writer);
+      return entry.getData!(writer);
     }
     return null;
   }
@@ -112,13 +113,13 @@ export class ZipServer {
   }
 
   private getSuffixFromUrl(url: string): string {
-    const suffix = url.split('?').pop().split('.').pop();
+    const suffix = url.split('?').pop()!.split('.').pop();
     return suffix ? suffix.toLowerCase() : '';
   }
 
   private getMimeTypeFromUrl(url: string): string {
     const suffix = this.getSuffixFromUrl(url);
-    return ZipServer.SuffixMapContentType[suffix] || 'application/octet-stream';
+    return ZipFileServer.SuffixMapContentType[suffix] || 'application/octet-stream';
   }
 
   private getWriterBasedOnContentType(contentType: string): BlobWriter {
@@ -169,6 +170,6 @@ export class ZipServer {
         })
       );
     }
-    return this.zipCache.get(baseUrl);
+    return this.zipCache.get(baseUrl)!;
   }
 }

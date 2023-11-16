@@ -1,7 +1,7 @@
 {
-  "name": "zip-server",
+  "name": "zip-file-server",
   "version": "0.1.0",
-  "description": "ZipServer is a lightweight library that serves as an intermediary between the web client and the server",
+  "description": "ZipFileServer is a lightweight library that serves as an intermediary between the web client and the server",
   "main": "dist/index.js",
   "scripts": {
     "build": "NODE_ENV=production node esbuild.js",
@@ -9,12 +9,12 @@
   },
   "keywords": [],
   "author": "Happy Wang <shuizhongyueming@gmail.com>",
-  "homepage": "https://github.com/shuizhongyueming/zip-server",
-  "bugs": "https://github.com/shuizhongyueming/zip-server/issues",
-  "github": "https://github.com/shuizhongyueming/zip-server",
+  "homepage": "https://github.com/shuizhongyueming/zip-file-server",
+  "bugs": "https://github.com/shuizhongyueming/zip-file-server/issues",
+  "github": "https://github.com/shuizhongyueming/zip-file-server",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shuizhongyueming/zip-server.git"
+    "url": "git+https://github.com/shuizhongyueming/zip-file-server.git"
   },
   "files": [
     "dist"
