@@ -4,9 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "NODE_ENV=production node esbuild.js",
+    "dev": "NODE_ENV=development node esbuild.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@zip.js/zip.js": "^2.7.30"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "esbuild": "^0.19.5"
+  }
 }
