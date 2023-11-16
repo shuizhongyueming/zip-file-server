@@ -8,7 +8,7 @@ esbuild.build({
   outfile: `dist/main.js`,
   logLevel: 'info',
   minify: isProduction,
-  format: 'iife',
+  format: 'esm',
   treeShaking: true,
   target: 'es2018',
   plugins: []
