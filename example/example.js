@@ -1,7 +1,6 @@
 
 
 import {ZipServer} from '../dist/main.js';
-console.log(ZipServer);
 
 const server = new ZipServer({
   remotes: [
