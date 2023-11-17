@@ -2,6 +2,7 @@ import {Entry} from '@zip.js/zip.js'
 import {configure, ZipReader, BlobWriter, BlobReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
 
 interface Remote {
+  name: string;
   zipUrl: string;
   prefix: string;
 }
@@ -82,6 +83,24 @@ export class ZipFileServer {
       url: this.getFallbackUrl(filePath),
       onComplete: () => {},
     };
+  }
+
+  // Preload zip file based on name
+  async preload(name: string): Promise<void> {
+    const remote = this.remotes.find((remote) => remote.name === name);
+    if (!remote) {
+      return console.error(`Failed to preload zip file: ${name}, not found`);
+    }
+    await this.getZip(remote.zipUrl);
+  }
+
+  // unload zip file based on name to free memory
+  async unload(name: string): Promise<void> {
+    const remote = this.remotes.find((remote) => remote.name === name);
+    if (!remote) {
+      return console.error(`Failed to unload zip file: ${name}, not found`);
+    }
+    this.zipCache.delete(remote.zipUrl);
   }
 
   private getFallbackUrl(filePath: string): string {
