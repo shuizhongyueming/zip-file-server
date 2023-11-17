@@ -1,5 +1,9 @@
 
-ZipFileServer is a lightweight library that serves as an intermediary between the web client and the server. It provides an efficient way to package and download numerous fragmented files as required.
+ZipFileServer is a lightweight library that serves as an intermediary between the web client and the server. 
+
+It provides an efficient way to package and download numerous fragmented files as required.
+
+The Core zip inflate feature is based on [zip.js](https://github.com/gildas-lormeau/zip.js).
 
 ## Table of Contents
 
