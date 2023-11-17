@@ -1,6 +1,6 @@
 {
   "name": "zip-file-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "ZipFileServer is a lightweight library that serves as an intermediary between the web client and the server",
   "main": "dist/index.js",
   "scripts": {
