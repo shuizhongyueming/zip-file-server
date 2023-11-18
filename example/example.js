@@ -34,6 +34,7 @@ function showImg(url) {
     document.body.appendChild(img);
   })
 }
+window.showImg = showImg;
 
 server.preload('res').then(() => {
   console.log('preload res.zip done');

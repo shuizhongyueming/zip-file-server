@@ -185,6 +185,7 @@ export class ZipFileServer {
           const blob = await response.blob();
           const reader = new ZipReader(new BlobReader(blob));
           const entries = await reader.getEntries();
+          reader.close();
           resolve(entries);
         })
       );
