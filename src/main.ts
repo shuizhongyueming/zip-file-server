@@ -7,13 +7,13 @@ interface Remote {
   prefix: string;
 }
 
-interface ZipFileServerOptions {
+export interface ZipFileServerOptions {
   remotes: Remote[];
   fetch: typeof fetch;
   fallbackUrl: string;
 }
 
-interface UrlResponse {
+export interface UrlResponse {
   url: string;
   onComplete: () => void;
 }
