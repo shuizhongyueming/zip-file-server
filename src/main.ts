@@ -51,7 +51,14 @@ export class ZipFileServer {
       : `${options.fallbackUrl}/`;
   }
 
-  async getData(filePath: string, headers?: HeadersInit): Promise<Response> {
+  async getData(filePath: string, init?: RequestInit): Promise<Response> {
+    const headers = init?.headers || {};
+
+    // only handle GET request with zip file
+    if (init?.method && init?.method !== 'GET') {
+      return this.fetch(filePath, init);
+    }
+
     const blob = await this.getBlob(filePath, headers);
     if (blob) {
       return new Response(blob, {
@@ -61,9 +68,7 @@ export class ZipFileServer {
       });
     }
 
-    return this.fetch(filePath, {
-      headers,
-    });
+    return this.fetch(filePath, init);
   }
 
   async getUrl(filePath: string): Promise<UrlResponse> {
