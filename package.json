@@ -4,6 +4,7 @@
   "description": "ZipFileServer is a lightweight library that serves as an intermediary between the web client and the server",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
+  "type": "module",
   "scripts": {
     "build": "NODE_ENV=production node esbuild.js; tsc  --emitDeclarationOnly",
     "dev": "NODE_ENV=development node esbuild.js; tsc  --emitDeclarationOnly"
