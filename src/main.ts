@@ -55,7 +55,7 @@ export class ZipFileServer {
     const headers = init?.headers || {};
 
     // only handle GET request with zip file
-    if (init?.method && init?.method !== 'GET') {
+    if (init?.method && init?.method !== 'GET' && !this.isPathUrl(filePath)) {
       return this.fetch(filePath, init);
     }
 
@@ -72,6 +72,13 @@ export class ZipFileServer {
   }
 
   async getUrl(filePath: string): Promise<UrlResponse> {
+    if (!this.isPathUrl(filePath)) {
+      return {
+        url: filePath,
+        onComplete: () => {},
+      };
+    }
+
     const blob = await this.getBlob(filePath);
 
     if (blob) {
@@ -106,6 +113,10 @@ export class ZipFileServer {
       return console.error(`Failed to unload zip file: ${name}, not found`);
     }
     this.zipCache.delete(remote.zipUrl);
+  }
+
+  private isPathUrl(url: string) {
+    return !url.startsWith('blob:') && !url.startsWith('data:');
   }
 
   private getFallbackUrl(filePath: string): string {
