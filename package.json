@@ -6,8 +6,8 @@
   "types": "dist/main.d.ts",
   "type": "module",
   "scripts": {
-    "build": "NODE_ENV=production node esbuild.js; tsc  --emitDeclarationOnly",
-    "dev": "NODE_ENV=development node esbuild.js; tsc  --emitDeclarationOnly"
+    "build": "NODE_ENV=production node esbuild.cjs; tsc  --emitDeclarationOnly",
+    "dev": "NODE_ENV=development node esbuild.cjs; tsc  --emitDeclarationOnly"
   },
   "keywords": [],
   "author": "Happy Wang <shuizhongyueming@gmail.com>",
