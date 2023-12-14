@@ -35,6 +35,8 @@ export class ZipFileServer {
     AAC: 'audio/aac',
     BIN: 'application/octet-stream',
     BASIS: 'image/basis',
+    WASM: 'application/wasm',
+    GLB: 'model/gltf-binary',
   };
 
   private remotes: Remote[];
@@ -153,7 +155,7 @@ export class ZipFileServer {
   }
 
   private getMimeTypeFromUrl(url: string): string {
-    const suffix = this.getSuffixFromUrl(url);
+    const suffix = this.getSuffixFromUrl(url).toUpperCase();
     return ZipFileServer.SuffixMapContentType[suffix] || 'application/octet-stream';
   }
 
