@@ -191,7 +191,7 @@ export class ZipFileServer {
     if (!this.zipCache.has(baseUrl)) {
       this.zipCache.set(
         baseUrl,
-        new Promise(async (resolve, reject) => {
+        new Promise(async (resolve, reject): Promise<Entry[]> => {
           const response = await this.fetch(baseUrl);
           if (!response.ok) {
             reject(
@@ -199,15 +199,16 @@ export class ZipFileServer {
                 `Failed to fetch zip from ${baseUrl}: ${response.status} ${response.statusText}`
               )
             );
+            return;
           }
           const blob = await response.blob();
           const reader = new ZipReader(new BlobReader(blob));
-          const entries = await reader.getEntries();
+          const entries: Entry[] = await reader.getEntries();
           reader.close();
           resolve(entries);
         })
       );
     }
-    return this.zipCache.get(baseUrl)!;
+    return await this.zipCache.get(baseUrl)!;
   }
 }
