@@ -58,18 +58,24 @@ export class ZipFileServer {
 
     // only handle GET request with zip file
     if (init?.method && init?.method !== 'GET' && !this.isPathUrl(filePath)) {
+      console.warn(`zip-file-server: not a GET request, so fallback to fetch: `, init.method, filePath);
       return this.fetch(filePath, init);
     }
 
-    const blob = await this.getBlob(filePath, headers);
-    if (blob) {
-      return new Response(blob, {
-        status: 200,
-        statusText: 'OK',
-        headers,
-      });
+    try {
+      const blob = await this.getBlob(filePath, headers);
+      if (blob) {
+        return new Response(blob, {
+          status: 200,
+          statusText: 'OK',
+          headers,
+        });
+      }
+    } catch (e) {
+      console.error('zip-file-server: getData: Failed to get blob from zip file: ', filePath, e);
     }
 
+    console.warn('zip-file-server: getData fallback to fetch for file: ', filePath);
     return this.fetch(filePath, init);
   }
 
@@ -81,18 +87,23 @@ export class ZipFileServer {
       };
     }
 
-    const blob = await this.getBlob(filePath);
+    try {
+      const blob = await this.getBlob(filePath);
 
-    if (blob) {
+      if (blob) {
       const url = URL.createObjectURL(blob);
       return {
         url,
         onComplete: () => {
           URL.revokeObjectURL(url);
-        },
-      };
+          },
+        };
+      }
+    } catch(e) {
+      console.error('zip-file-server: getUrl: Failed to get blob from zip file: ', filePath, e);
     }
 
+    console.warn('zip-file-server: getUrl fallback to getFallbackUrl: ', filePath);
     return {
       url: this.getFallbackUrl(filePath),
       onComplete: () => {},
