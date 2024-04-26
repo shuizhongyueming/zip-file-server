@@ -91,11 +91,11 @@ export class ZipFileServer {
       const blob = await this.getBlob(filePath);
 
       if (blob) {
-      const url = URL.createObjectURL(blob);
-      return {
-        url,
-        onComplete: () => {
-          URL.revokeObjectURL(url);
+        const url = URL.createObjectURL(blob);
+        return {
+          url,
+          onComplete: () => {
+            URL.revokeObjectURL(url);
           },
         };
       }
@@ -114,7 +114,7 @@ export class ZipFileServer {
   async preload(name: string): Promise<void> {
     const remote = this.remotes.find((remote) => remote.name === name);
     if (!remote) {
-      return console.error(`Failed to preload zip file: ${name}, not found`);
+      return console.error(`zip-file-server: Failed to preload zip file: ${name}, not found`);
     }
     await this.getZip(remote.zipUrl);
   }
@@ -123,7 +123,7 @@ export class ZipFileServer {
   async unload(name: string): Promise<void> {
     const remote = this.remotes.find((remote) => remote.name === name);
     if (!remote) {
-      return console.error(`Failed to unload zip file: ${name}, not found`);
+      return console.error(`zip-file-server: Failed to unload zip file: ${name}, not found`);
     }
     this.zipCache.delete(remote.zipUrl);
   }
@@ -144,7 +144,7 @@ export class ZipFileServer {
     const entry = await this.getTargetEntry(url);
 
     if (entry) {
-      let writer;
+      let writer: BlobWriter;
       if (headers?.['content-type']) {
         writer = this.getWriterBasedOnContentType(headers['content-type']);
       } else {
@@ -179,6 +179,7 @@ export class ZipFileServer {
     // 找到对应的 remote sources
     const remote = this.getRemote(url);
     if (!remote) {
+      console.log('zip-file-server: getTargetEntry has no remote for url: ', url);
       return null;
     }
     // 从 remote sources 中找到对应的 zipUrl
@@ -189,7 +190,7 @@ export class ZipFileServer {
       const entries = await this.getZip(zipUrl);
       return entries.find((entry) => entry.filename === pathInZip) || null;
     } catch (error) {
-      console.error(error);
+      console.error('zip-file-server: get entry failed: ', url, error);
       return null;
     }
   }
