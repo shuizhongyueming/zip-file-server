@@ -187,13 +187,24 @@ export class ZipFileServer {
     return this.remotes.find((remote) => url.startsWith(remote.prefix)) || null;
   }
 
-  private async getZip(baseUrl: string): Promise<Entry[]> {
+  private getZip(baseUrl: string): Promise<Entry[]> {
     if (!this.zipCache.has(baseUrl)) {
+      console.log('zip-file-server: getZip, has no cache, request it', baseUrl)
       this.zipCache.set(
         baseUrl,
         new Promise(async (resolve, reject): Promise<Entry[]> => {
-          const response = await this.fetch(baseUrl);
+          let response: Response;
+
+          try {
+            response = await this.fetch(baseUrl);
+          } catch (error) {
+            console.error('zip-file-server: getZip fetch zip error: ', baseUrl, error)
+            reject(new Error(`Failed to fetch zip from ${baseUrl}: ${error}`));
+            return;
+          }
+
           if (!response.ok) {
+            console.error('zip-file-server: getZip fetch zip failed: ', baseUrl, response.status, response.statusText);
             reject(
               new Error(
                 `Failed to fetch zip from ${baseUrl}: ${response.status} ${response.statusText}`
@@ -201,14 +212,19 @@ export class ZipFileServer {
             );
             return;
           }
-          const blob = await response.blob();
-          const reader = new ZipReader(new BlobReader(blob));
-          const entries: Entry[] = await reader.getEntries();
-          reader.close();
-          resolve(entries);
+          try {
+            const blob = await response.blob();
+            const reader = new ZipReader(new BlobReader(blob));
+            const entries: Entry[] = await reader.getEntries();
+            reader.close();
+            resolve(entries);
+          } catch (e) {
+            console.error('zip-file-server: getZip get entries failed: ', baseUrl, e)
+            reject(new Error(`Failed to get entries from zip: ${baseUrl}, ${e}`));
+          }
         })
       );
     }
-    return await this.zipCache.get(baseUrl)!;
+    return this.zipCache.get(baseUrl)!;
   }
 }
