@@ -23,7 +23,7 @@
   ],
   "license": "BSD-3-Clause",
   "dependencies": {
-    "@zip.js/zip.js": "^2.7.30"
+    "@zip.js/zip.js": "^2.7.45"
   },
   "devDependencies": {
     "@types/node": "^20.9.0",
