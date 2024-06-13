@@ -63,9 +63,11 @@ export class ZipFileServer {
     }
 
     try {
-      const blob = await this.getBlob(filePath, headers);
-      if (blob) {
-        return new Response(blob, {
+      const entry = await this.getTargetEntry(filePath);
+      if (entry) {
+        const stream = new TransformStream();
+        entry.getData(stream.writable).then(() => {});
+        return new Response(stream.readable, {
           status: 200,
           statusText: 'OK',
           headers,
