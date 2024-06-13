@@ -1,5 +1,5 @@
 import {Entry} from '@zip.js/zip.js'
-import {configure, ZipReader, BlobWriter, BlobReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
+import {configure, ZipReader, BlobWriter, HttpReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
 
 interface Remote {
   name: string;
@@ -213,28 +213,19 @@ export class ZipFileServer {
     return null;
   }
 
-  private async fetchZip(baseUrl: string): Promise<Entry[]> {
-    let response: Response;
-
+  private async fetchZipEntries(baseUrl: string): Promise<Entry[]> {
     try {
-      response = await this.fetch(baseUrl);
-    } catch (error) {
-      console.error('zip-file-server: getZip fetch zip error: ', baseUrl, error)
-      throw new Error(`Failed to fetch zip from ${baseUrl}: ${error}`);
-    }
-
-    if (!response.ok) {
-      console.error('zip-file-server: getZip fetch zip failed: ', baseUrl, response.status, response.statusText);
-      throw new Error(
-          `Failed to fetch zip from ${baseUrl}: ${response.status} ${response.statusText}`
-      );
-    }
-
-    try {
-      const blob = await response.blob();
-      const reader = new ZipReader(new BlobReader(blob));
+      let url = (new URL(baseUrl, location.href)).href;
+      const reader = new ZipReader(new HttpReader(url, {
+        useRangeHeader: false,
+        // no need extra request to get content length
+        preventHeadRequest: true,
+        combineSizeEocd: false
+      }));
       const entries: Entry[] = await reader.getEntries();
-      reader.close();
+      reader.close().catch(err => {
+        console.error('zip-file-server: getZip close reader failed: ', baseUrl, err)
+      });
       return entries;
     } catch (e) {
       console.error('zip-file-server: getZip get entries failed: ', baseUrl, e)
@@ -245,7 +236,7 @@ export class ZipFileServer {
   private getZip(baseUrl: string): Promise<Entry[]> {
     if (!this.zipCache.has(baseUrl)) {
       console.log('zip-file-server: getZip, has no cache, request it', baseUrl)
-      this.zipCache.set(baseUrl, this.fetchZip(baseUrl));
+      this.zipCache.set(baseUrl, this.fetchZipEntries(baseUrl));
     }
     return this.zipCache.get(baseUrl)!;
   }
