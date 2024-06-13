@@ -1,4 +1,4 @@
-import {Entry} from '@zip.js/zip.js'
+import {type Entry} from '@zip.js/zip.js'
 import {configure, ZipReader, BlobWriter, HttpReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
 
 interface Remote {
