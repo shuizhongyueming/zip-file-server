@@ -36,6 +36,20 @@ function showImg(url) {
 }
 window.showImg = showImg;
 
+function loadScript(url) {
+  return new Promise(resolve => {
+    const script = document.createElement('script');
+    server.getUrl(url).then(({url, onComplete}) => {
+      script.src = url;
+      script.onload = () => {
+        onComplete();
+        resolve();
+      };
+    });
+    document.body.appendChild(script);
+  });
+}
+
 server.preload('res').then(() => {
   console.log('preload res.zip done');
 
@@ -50,6 +64,16 @@ server.preload('res').then(() => {
     showImg('res/img2.png').then(() => {
       console.log('load res/img2.png done');
     });
+  });
+
+  server.addRemote({
+    name: 'extra',
+    zipUrl: 'extra.zip',
+    prefix: 'extra/'
+  });
+
+  loadScript('extra/e.js').then(() => {
+    console.log('load extra/e.js done');
   });
 });
 
