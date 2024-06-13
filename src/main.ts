@@ -128,6 +128,13 @@ export class ZipFileServer {
     this.zipCache.delete(remote.zipUrl);
   }
 
+  addRemote(remote: Remote) {
+    if (this.remotes.has(remote.name)) {
+      throw new Error(`zip-file-server: remote ${remote.name} already exists`);
+    }
+    this.remotes.set(remote.name, remote);
+  }
+
   private isPathUrl(url: string) {
     return !url.startsWith('blob:') && !url.startsWith('data:');
   }
