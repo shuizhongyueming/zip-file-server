@@ -1,5 +1,5 @@
 import {type Entry} from '@zip.js/zip.js'
-import {configure, ZipReader, BlobWriter, HttpReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
+import {configure, ZipReader, HttpReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
 
 interface Remote {
   name: string;
@@ -19,26 +19,6 @@ export interface UrlResponse {
 }
 
 export class ZipFileServer {
-  static SuffixMapContentType = {
-    FORM_URLENCODED: 'application/x-www-form-urlencoded',
-    GIF: 'image/gif',
-    JPEG: 'image/jpeg',
-    DDS: 'image/dds',
-    JSON: 'application/json',
-    PNG: 'image/png',
-    TEXT: 'text/plain',
-    XML: 'application/xml',
-    WAV: 'audio/x-wav',
-    OGG: 'audio/ogg',
-    MP3: 'audio/mpeg',
-    MP4: 'audio/mp4',
-    AAC: 'audio/aac',
-    BIN: 'application/octet-stream',
-    BASIS: 'image/basis',
-    WASM: 'application/wasm',
-    GLB: 'model/gltf-binary',
-  };
-
   private remotes: Map<string, Remote>;
   private readonly fetch: typeof fetch;
   private zipCache = new Map<string, Promise<Entry[]>>();
@@ -90,7 +70,8 @@ export class ZipFileServer {
     }
 
     try {
-      const blob = await this.getBlob(filePath);
+      const response = await this.getData(filePath);
+      const blob = await response.blob();
 
       if (blob) {
         const url = URL.createObjectURL(blob);
@@ -118,7 +99,7 @@ export class ZipFileServer {
     if (!remote) {
       return console.error(`zip-file-server: Failed to preload zip file: ${name}, not found`);
     }
-    await this.getZip(remote.zipUrl);
+    await this.getZipEntries(remote.zipUrl);
   }
 
   // unload zip file based on name to free memory
@@ -149,41 +130,6 @@ export class ZipFileServer {
     return filePath;
   }
 
-  private async getBlob(url: string, headers?: HeadersInit): Promise<Blob | null> {
-    const entry = await this.getTargetEntry(url);
-
-    if (entry) {
-      let writer: BlobWriter;
-      if (headers?.['content-type']) {
-        writer = this.getWriterBasedOnContentType(headers['content-type']);
-      } else {
-        writer = this.getWriterBasedOnUrl(url);
-      }
-      return entry.getData!(writer);
-    }
-    return null;
-  }
-
-  private getWriterBasedOnUrl(url: string): BlobWriter {
-    const mimeType = this.getMimeTypeFromUrl(url);
-    return new BlobWriter(mimeType);
-  }
-
-  private getSuffixFromUrl(url: string): string {
-    const suffix = url.split('?').pop()!.split('.').pop();
-    return suffix ? suffix.toLowerCase() : '';
-  }
-
-  private getMimeTypeFromUrl(url: string): string {
-    const suffix = this.getSuffixFromUrl(url).toUpperCase();
-    return ZipFileServer.SuffixMapContentType[suffix] || 'application/octet-stream';
-  }
-
-  private getWriterBasedOnContentType(contentType: string): BlobWriter {
-    const mimeType = contentType.split(';')[0];
-    return new BlobWriter(mimeType);
-  }
-
   private async getTargetEntry(url: string): Promise<Entry | null> {
     // 找到对应的 remote sources
     const remote = this.getRemote(url);
@@ -196,7 +142,7 @@ export class ZipFileServer {
     const pathInZip = url.slice(remote.prefix.length);
     // 基于 zipUrl 从缓存或者远程服务器获取 zip
     try {
-      const entries = await this.getZip(zipUrl);
+      const entries = await this.getZipEntries(zipUrl);
       return entries.find((entry) => entry.filename === pathInZip) || null;
     } catch (error) {
       console.error('zip-file-server: get entry failed: ', url, error);
@@ -233,7 +179,7 @@ export class ZipFileServer {
     }
   }
 
-  private getZip(baseUrl: string): Promise<Entry[]> {
+  private getZipEntries(baseUrl: string): Promise<Entry[]> {
     if (!this.zipCache.has(baseUrl)) {
       console.log('zip-file-server: getZip, has no cache, request it', baseUrl)
       this.zipCache.set(baseUrl, this.fetchZipEntries(baseUrl));
