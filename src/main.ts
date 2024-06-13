@@ -39,14 +39,14 @@ export class ZipFileServer {
     GLB: 'model/gltf-binary',
   };
 
-  private remotes: Remote[];
-  private fetch: typeof fetch;
+  private remotes: Map<string, Remote>;
+  private readonly fetch: typeof fetch;
   private zipCache = new Map<string, Promise<Entry[]>>();
-  private fallbackUrl: string;
+  private readonly fallbackUrl: string;
 
   constructor(options: ZipFileServerOptions) {
     configure({ useWebWorkers: false });
-    this.remotes = options.remotes;
+    this.remotes = new Map(options.remotes.map((remote) => [remote.name, remote]));
     this.fetch = options.fetch;
     this.fallbackUrl = options.fallbackUrl.endsWith('/')
       ? options.fallbackUrl
@@ -112,7 +112,7 @@ export class ZipFileServer {
 
   // Preload zip file based on name
   async preload(name: string): Promise<void> {
-    const remote = this.remotes.find((remote) => remote.name === name);
+    const remote = this.remotes.get(name);
     if (!remote) {
       return console.error(`zip-file-server: Failed to preload zip file: ${name}, not found`);
     }
@@ -121,7 +121,7 @@ export class ZipFileServer {
 
   // unload zip file based on name to free memory
   async unload(name: string): Promise<void> {
-    const remote = this.remotes.find((remote) => remote.name === name);
+    const remote = this.remotes.get(name);
     if (!remote) {
       return console.error(`zip-file-server: Failed to unload zip file: ${name}, not found`);
     }
@@ -196,7 +196,12 @@ export class ZipFileServer {
   }
 
   private getRemote(url: string): Remote | null {
-    return this.remotes.find((remote) => url.startsWith(remote.prefix)) || null;
+    for (const remote of this.remotes.values()) {
+      if (url.startsWith(remote.prefix)) {
+        return remote;
+      }
+    }
+    return null;
   }
 
   private async fetchZip(baseUrl: string): Promise<Entry[]> {
