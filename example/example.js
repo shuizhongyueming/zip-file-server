@@ -1,6 +1,6 @@
 
 
-import {ZipFileServer} from '../dist/main.js';
+import {ZipFileServer} from '../dist/main.esm.js';
 
 const server = new ZipFileServer({
   remotes: [
