@@ -45,13 +45,7 @@ export class ZipFileServer {
     try {
       const entry = await this.getTargetEntry(filePath);
       if (entry) {
-        const stream = new TransformStream();
-        entry.getData(stream.writable).then(() => {});
-        return new Response(stream.readable, {
-          status: 200,
-          statusText: 'OK',
-          headers,
-        });
+        return this.getResponse(entry, headers);
       }
     } catch (e) {
       console.error('zip-file-server: getData: Failed to get blob from zip file: ', filePath, e);
@@ -69,8 +63,17 @@ export class ZipFileServer {
       };
     }
 
+    const entry = await this.getTargetEntry(filePath);
+    if (!entry) {
+      console.warn('zip-file-server: getUrl: no matched entry found,  fallback to getFallbackUrl: ', filePath);
+      return {
+        url: this.getFallbackUrl(filePath),
+        onComplete: () => {},
+      };
+    }
+
     try {
-      const response = await this.getData(filePath);
+      const response = await this.getResponse(entry);
       const blob = await response.blob();
 
       if (blob) {
@@ -86,7 +89,7 @@ export class ZipFileServer {
       console.error('zip-file-server: getUrl: Failed to get blob from zip file: ', filePath, e);
     }
 
-    console.warn('zip-file-server: getUrl fallback to getFallbackUrl: ', filePath);
+    console.warn('zip-file-server: getUrl: fallback to getFallbackUrl: ', filePath);
     return {
       url: this.getFallbackUrl(filePath),
       onComplete: () => {},
@@ -128,6 +131,16 @@ export class ZipFileServer {
       return `${this.fallbackUrl}${filePath}`;
     }
     return filePath;
+  }
+
+  private async getResponse(entry: Entry, headers?: HeadersInit): Promise<Response> {
+    const stream = new TransformStream();
+    entry.getData(stream.writable).then(() => {});
+    return new Response(stream.readable, {
+      status: 200,
+      statusText: 'OK',
+      headers,
+    });
   }
 
   private async getTargetEntry(url: string): Promise<Entry | null> {
