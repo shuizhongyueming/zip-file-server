@@ -86,3 +86,7 @@ showImg('bundle/img.png');
 server.getData('bundle/info.txt').then(res => res.text()).then(data => {
   console.log('info.txt', data);
 });
+
+loadScript('bundle/f.js').then(() => {
+  console.log('load bundle/f.js done');
+});

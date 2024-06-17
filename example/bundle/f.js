@@ -1,0 +1,1 @@
+console.log('f.js should load with fallback');
