@@ -1,4 +1,4 @@
-import {type Entry} from '@zip.js/zip.js'
+import {BlobWriter, type Entry} from '@zip.js/zip.js'
 import {configure, ZipReader, HttpReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
 
 interface Remote {
@@ -17,6 +17,10 @@ export interface UrlResponse {
   url: string;
   onComplete: () => void;
 }
+
+// @ts-ignore
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+const iOSVersion = isIOS ? parseInt(navigator.userAgent.match(/OS (\d+)/)[1], 10) : 0
 
 export class ZipFileServer {
   private remotes: Map<string, Remote>;
@@ -45,7 +49,7 @@ export class ZipFileServer {
     try {
       const entry = await this.getTargetEntry(filePath);
       if (entry) {
-        return this.getResponse(entry, headers);
+        return this.getResponse(filePath, entry, headers);
       }
     } catch (e) {
       console.error('zip-file-server: getData: Failed to get blob from zip file: ', filePath, e);
@@ -73,7 +77,7 @@ export class ZipFileServer {
     }
 
     try {
-      const response = await this.getResponse(entry);
+      const response = await this.getResponse(filePath, entry);
       const blob = await response.blob();
 
       if (blob) {
@@ -133,9 +137,29 @@ export class ZipFileServer {
     return filePath;
   }
 
-  private async getResponse(entry: Entry, headers?: HeadersInit): Promise<Response> {
+  private async getBlob(url: string, entry: Entry, headers?: HeadersInit): Promise<Blob> {
+    let writer: BlobWriter = new BlobWriter;
+
+    return entry.getData(writer, {
+      // iOS 15 requires a signal to be passed to
+      // or it will throw an error: options.signal must be an AbortSignal
+      signal: new AbortController().signal,
+    });
+  }
+
+  private async getResponse(url: string, entry: Entry, headers?: HeadersInit): Promise<Response> {
+    if (isIOS && iOSVersion < 16) {
+      // iOS 15 and below does not support ReadableStream as response
+      // which will return empty response for receiver
+      const blob = await this.getBlob(url, entry, headers);
+      return new Response(blob, {
+        status: 200,
+        statusText: 'OK',
+        headers,
+      });
+    }
     const stream = new TransformStream();
-    entry.getData(stream.writable).then(() => {});
+    entry.getData(stream.writable).then(() => { });
     return new Response(stream.readable, {
       status: 200,
       statusText: 'OK',
