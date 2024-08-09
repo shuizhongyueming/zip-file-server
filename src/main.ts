@@ -41,8 +41,13 @@ export class ZipFileServer {
     const headers = init?.headers || {};
 
     // only handle GET request with zip file
-    if (init?.method && init?.method !== 'GET' && !this.isPathUrl(filePath)) {
+    if (init?.method && init?.method !== 'GET') {
       console.warn(`zip-file-server: not a GET request, so fallback to fetch: `, init.method, filePath);
+      return this.fetch(filePath, init);
+    }
+
+    if (this.isUrl(filePath)) {
+      console.warn('zip-file-server: getData fallback to fetch for url: ', filePath);
       return this.fetch(filePath, init);
     }
 
@@ -60,7 +65,8 @@ export class ZipFileServer {
   }
 
   async getUrl(filePath: string): Promise<UrlResponse> {
-    if (!this.isPathUrl(filePath)) {
+    if (this.isUrl(filePath)) {
+      console.warn('zip-file-server: getUrl fallback to getFallbackUrl for url: ', filePath);
       return {
         url: filePath,
         onComplete: () => {},
@@ -125,8 +131,9 @@ export class ZipFileServer {
     this.remotes.set(remote.name, remote);
   }
 
-  private isPathUrl(url: string) {
-    return !url.startsWith('blob:') && !url.startsWith('data:');
+  private isUrl(url: string) {
+    const protocols = ['http:', 'https:', 'ftp:', 'ftps:', 'ws:', 'wss:', 'blob:', 'data:'];
+    return protocols.some(p => url.startsWith(p));
   }
 
   private getFallbackUrl(filePath: string): string {
