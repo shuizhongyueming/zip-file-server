@@ -64,7 +64,8 @@ export class ZipFileServer {
     return this.fetch(filePath, init);
   }
 
-  async getUrl(filePath: string): Promise<UrlResponse> {
+  async getUrl(filePath: string, init?: RequestInit): Promise<UrlResponse> {
+    const headers = init?.headers || {};
     if (this.isUrl(filePath)) {
       console.warn('zip-file-server: getUrl fallback to getFallbackUrl for url: ', filePath);
       return {
@@ -83,7 +84,7 @@ export class ZipFileServer {
     }
 
     try {
-      const response = await this.getResponse(filePath, entry);
+      const response = await this.getResponse(filePath, entry, headers);
       const blob = await response.blob();
 
       if (blob) {
