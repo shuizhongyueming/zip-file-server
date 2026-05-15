@@ -257,5 +257,8 @@ fabric.properties
 !.idea/codeStyles
 !.idea/runConfigurations
 
+# Sensitive / business-specific zip fixtures
+loading_4.zip
+
 # End of https://www.toptal.com/developers/gitignore/api/osx,node,webstorm+all
 

@@ -1,6 +1,9 @@
 import {BlobWriter, type Entry} from '@zip.js/zip.js'
 import {configure, ZipReader, HttpReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
 
+const cp437Decoder = new TextDecoder('utf-8', {fatal: true});
+const utf8Encoder = new TextEncoder();
+
 interface Remote {
   name: string;
   zipUrl: string;
@@ -204,6 +207,28 @@ export class ZipFileServer {
     return null;
   }
 
+  private decodeZipText(rawText: Uint8Array, encoding: string): string | undefined {
+    if (encoding !== 'cp437') {
+      return undefined;
+    }
+
+    try {
+      const decoded = cp437Decoder.decode(rawText);
+      const encoded = utf8Encoder.encode(decoded);
+      if (encoded.length !== rawText.length) {
+        return undefined;
+      }
+      for (let index = 0; index < encoded.length; index += 1) {
+        if (encoded[index] !== rawText[index]) {
+          return undefined;
+        }
+      }
+      return decoded;
+    } catch {
+      return undefined;
+    }
+  }
+
   private async fetchZipEntries(baseUrl: string): Promise<Entry[]> {
     try {
       let url = (new URL(baseUrl, location.href)).href;
@@ -213,7 +238,9 @@ export class ZipFileServer {
         preventHeadRequest: true,
         combineSizeEocd: false
       }));
-      const entries: Entry[] = await reader.getEntries();
+      const entries: Entry[] = await reader.getEntries({
+        decodeText: (rawText, encoding) => this.decodeZipText(rawText, encoding),
+      });
       reader.close().catch(err => {
         console.error('zip-file-server: getZip close reader failed: ', baseUrl, err)
       });
