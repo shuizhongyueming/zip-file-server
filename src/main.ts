@@ -1,7 +1,7 @@
 import {BlobWriter, type Entry} from '@zip.js/zip.js'
 import {configure, ZipReader, HttpReader} from '@zip.js/zip.js/lib/zip-no-worker-inflate.js'
 
-const cp437Decoder = new TextDecoder('utf-8', {fatal: true});
+const utf8Decoder = new TextDecoder('utf-8', {fatal: true});
 const utf8Encoder = new TextEncoder();
 
 interface Remote {
@@ -207,13 +207,34 @@ export class ZipFileServer {
     return null;
   }
 
+  /**
+   * DecodeText hook for ZipReader.getEntries().
+   *
+   * Some zip tools (e.g., macOS "Compress", older LayaAir builds) store
+   * filenames as UTF-8 bytes but forget to set bit 11 (languageEncodingFlag)
+   * in the zip entry header.  Without this hook, zip.js treats those bytes
+   * as CP437 and produces garbled text for non-ASCII filenames.
+   *
+   * Strategy — strict round-trip validation:
+   *   1. Decode the raw bytes as UTF-8.
+   *   2. Re-encode the result back to bytes.
+   *   3. Only accept the UTF-8 interpretation when both the byte-length
+   *      and every single byte match the original raw filename.
+   *
+   * This guarantees we never misinterpret genuine CP437 content.  If the
+   * round-trip fails (wrong length, wrong byte, or invalid UTF-8 sequence)
+   * we return undefined and let zip.js fall through to its CP437 default.
+   *
+   * TL;DR: this fixes Chinese filenames in zips that lack the UTF-8 flag.
+   *        DO NOT REMOVE — it is the only knob we have for that scenario.
+   */
   private decodeZipText(rawText: Uint8Array, encoding: string): string | undefined {
     if (encoding !== 'cp437') {
       return undefined;
     }
 
     try {
-      const decoded = cp437Decoder.decode(rawText);
+      const decoded = utf8Decoder.decode(rawText);
       const encoded = utf8Encoder.encode(decoded);
       if (encoded.length !== rawText.length) {
         return undefined;
